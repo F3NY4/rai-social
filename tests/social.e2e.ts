@@ -1,0 +1,66 @@
+import {expect,test} from '@playwright/test';
+
+test('mobile feed, publishing, reactions and offline reload',async({page,context})=>{
+  const errors:string[]=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/');
+  await expect(page.getByRole('heading',{name:'Неоновый горизонт'})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  const nav=page.getByRole('navigation',{name:'Мобильная навигация'});
+  await nav.getByRole('button',{name:'Создать пост'}).click();
+  await page.getByRole('dialog').getByRole('textbox',{name:'Текст публикации'}).fill('Новый маршрут #Проверка');
+  await page.getByRole('dialog').getByRole('button',{name:'Опубликовать'}).click();
+  const post=page.getByRole('article').filter({hasText:'Новый маршрут'});
+  await expect(post).toBeVisible();
+  await post.getByRole('button',{name:'Нравится'}).click();
+  await expect(post.getByRole('button',{name:'Нравится'})).toHaveAttribute('aria-pressed','true');
+  await post.getByRole('button',{name:'Комментарии'}).click();
+  await page.getByRole('textbox',{name:'Ваш комментарий'}).fill('Идём вместе?');
+  await page.getByRole('button',{name:'Ответить',exact:true}).click();
+  await expect(page.getByText('Идём вместе?')).toBeVisible();
+  await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
+  await expect.poll(()=>page.evaluate(()=>!!navigator.serviceWorker.controller)).toBe(true);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByText('Идём вместе?')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+test('new world, character, chat and isolation across switching',async({page})=>{
+  await page.goto('/');
+  await page.getByRole('button',{name:'Открыть вселенную'}).click();
+  await page.getByRole('button',{name:'Новая вселенная'}).click();
+  await page.getByLabel('Название',{exact:true}).fill('Тихий город');
+  await page.getByLabel('Имя',{exact:true}).fill('Таня');
+  await page.getByLabel('Username',{exact:true}).first().fill('tanya');
+  await page.getByText('Добавить первого персонажа',{exact:true}).click();
+  await page.getByLabel('Имя персонажа').fill('Илья');
+  await page.getByLabel('Username',{exact:true}).last().fill('ilya');
+  await page.getByRole('button',{name:'Создать вселенную'}).click();
+  await expect(page.getByRole('heading',{name:'Нейросеть',exact:true})).toBeVisible();
+  const nav=page.getByRole('navigation',{name:'Мобильная навигация'});
+  await nav.getByRole('button',{name:'Сообщения'}).click();
+  await page.getByRole('button',{name:'Новый чат'}).click();
+  await page.getByLabel('Илья').check();
+  await page.getByRole('button',{name:'Открыть переписку'}).click();
+  await page.getByRole('textbox',{name:'Сообщение',exact:true}).fill('Расскажи о городе.');
+  await page.getByRole('button',{name:'Отправить'}).click();
+  await expect(page.getByText('Расскажи о городе.')).toBeVisible();
+  await nav.getByRole('button',{name:'Главная'}).click();
+  await expect(page.getByRole('heading',{name:'Тихий город'})).toBeVisible();
+  await expect(page.getByText('На крыше, над линией метро',{exact:false})).toHaveCount(0);
+});
+
+test('language, theme and network export survive reload',async({page})=>{
+  await page.goto('/');
+  await expect(page.getByRole('heading',{name:'Неоновый горизонт'})).toBeVisible();
+  await page.getByRole('button',{name:'Настройки',exact:true}).filter({visible:true}).click();
+  await page.getByRole('combobox',{name:'Тема',exact:true}).selectOption('light');
+  await page.getByRole('combobox',{name:'Язык интерфейса',exact:true}).selectOption('en');
+  await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();
+  const download=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Export network'}).click();
+  expect((await download).suggestedFilename()).toBe('rai-social.json');
+  await page.reload();
+  await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();
+  await expect(page.locator('.app-theme')).toHaveAttribute('data-theme','light');
+});

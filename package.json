@@ -1,0 +1,45 @@
+{
+  "name": "rai-social",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "e2e": "playwright test",
+    "test:model": "node scripts/model-smoke.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "@sveltejs/adapter-static": "^4.0.1",
+    "@sveltejs/kit": "^3.4.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@wllama/wllama": "3.13.0",
+    "@wllama/wllama-compat": "3.13.0",
+    "dexie": "^4.4.7",
+    "fflate": "^0.8.3",
+    "lucide-svelte": "^1.0.1",
+    "svelte": "^5.58.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.8",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^26.6.6",
+    "fake-indexeddb": "^6.2.8",
+    "svelte-check": "^4.7.8",
+    "vitest": "^5.1.1"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "private": true
+}
